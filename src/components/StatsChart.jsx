@@ -37,12 +37,22 @@ export default function StatsChart() {
   }, []);
 
   const data = {
-    labels: ["Tasks", "Goals", "Habits"],
+    labels: ["Statistics"],
     datasets: [
       {
-        label: "Count",
-        data: [stats.tasks, stats.goals, stats.habits],
-        backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56"]
+        label: "Tasks",
+        data: [stats.tasks],
+        backgroundColor: "#36A2EB"
+      },
+      {
+        label: "Goals",
+        data: [stats.goals],
+        backgroundColor: "#FF6384"
+      },
+      {
+        label: "Habits",
+        data: [stats.habits],
+        backgroundColor: "#FFCE56"
       }
     ]
   };
