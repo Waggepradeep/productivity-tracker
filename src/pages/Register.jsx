@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { register } from "../firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
-import { updateProfile } from "firebase/auth";
+import { updateProfile, reload } from "firebase/auth";
 import { auth } from "../firebase/config";
 
 export default function Register() {
@@ -17,7 +17,9 @@ export default function Register() {
     try {
       const userCredential = await register(email, password);
       // Set display name in Firebase Auth
-      await updateProfile(auth.currentUser, { displayName: username });
+      await updateProfile(userCredential.user, { displayName: username });
+      // Reload to ensure the profile is updated
+      await reload(auth.currentUser);
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);
