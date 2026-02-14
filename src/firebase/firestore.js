@@ -8,10 +8,12 @@ import {
   query,
   updateDoc,
   onSnapshot,
-  orderBy
+  orderBy,
+  serverTimestamp
 } from "firebase/firestore";
 
 function getUserCollection(collectionName) {
+  if (!auth || !db) throw new Error("App is not configured. Check Firebase environment variables.");
   const user = auth.currentUser;
   if (!user) throw new Error("Not authenticated");
   return collection(db, "users", user.uid, collectionName);
@@ -19,7 +21,7 @@ function getUserCollection(collectionName) {
 
 // ====== TASKS ======
 export async function addTask(task) {
-  return addDoc(getUserCollection("tasks"), task);
+  return addDoc(getUserCollection("tasks"), { ...task, createdAt: serverTimestamp() });
 }
 
 export async function deleteTask(id) {
@@ -41,7 +43,7 @@ export function subscribeToTasks(onData, onError) {
 
 // ====== GOALS ======
 export async function addGoal(goal) {
-  return addDoc(getUserCollection("goals"), goal);
+  return addDoc(getUserCollection("goals"), { ...goal, createdAt: serverTimestamp() });
 }
 
 export async function deleteGoal(id) {
@@ -67,7 +69,7 @@ export async function addHabit(habit) {
     name: habit,
     completed: false,
     date: new Date().toISOString().slice(0, 10),
-    createdAt: Date.now()
+    createdAt: serverTimestamp()
   });
 }
 
