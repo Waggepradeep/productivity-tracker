@@ -1,32 +1,43 @@
-// src/components/TaskList.jsx
-import { useState, useEffect } from "react";
-import { addTask, getTasks, deleteTask } from "../firebase/firestore";
-import { auth } from "../firebase/config";
+﻿import { useState, useEffect } from "react";
+import { addTask, deleteTask, subscribeToTasks } from "../firebase/firestore";
 
 export default function TaskList() {
   const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!auth.currentUser) return;
-    getTasks().then(setTasks).catch(console.error);
+    const unsubscribe = subscribeToTasks(
+      (data) => setTasks(data),
+      (err) => setError(err.message)
+    );
+    return () => unsubscribe();
   }, []);
 
   async function handleAddTask() {
-    if (!taskInput.trim()) return;
-    await addTask({ text: taskInput, createdAt: Date.now() });
-    setTasks(await getTasks());
-    setTaskInput("");
+    const text = taskInput.trim();
+    if (!text) return;
+
+    try {
+      await addTask({ text, createdAt: Date.now() });
+      setTaskInput("");
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   async function handleDeleteTask(id) {
-    await deleteTask(id);
-    setTasks(await getTasks());
+    try {
+      await deleteTask(id);
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   return (
     <div className="section task-section">
       <h2>Tasks</h2>
+      {error && <p className="error">{error}</p>}
       <div>
         <input
           value={taskInput}
@@ -36,10 +47,10 @@ export default function TaskList() {
         <button onClick={handleAddTask}>Add</button>
       </div>
       <ul>
-        {tasks.map((t) => (
-          <li key={t.id}>
-            {t.text}
-            <button onClick={() => handleDeleteTask(t.id)}>❌</button>
+        {tasks.map((task) => (
+          <li key={task.id}>
+            {task.text}
+            <button onClick={() => handleDeleteTask(task.id)}>Delete</button>
           </li>
         ))}
       </ul>

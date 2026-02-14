@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { getTasks, getGoals, getHabits } from "../firebase/firestore";
+﻿import { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -10,6 +9,7 @@ import {
   Tooltip,
   Legend
 } from "chart.js";
+import { subscribeToGoals, subscribeToHabits, subscribeToTasks } from "../firebase/firestore";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -17,23 +17,15 @@ export default function StatsChart() {
   const [stats, setStats] = useState({ tasks: 0, goals: 0, habits: 0 });
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const tasks = await getTasks();
-        const goals = await getGoals();
-        const habits = await getHabits();
+    const unsubs = [
+      subscribeToTasks((tasks) => setStats((prev) => ({ ...prev, tasks: tasks.length })), console.error),
+      subscribeToGoals((goals) => setStats((prev) => ({ ...prev, goals: goals.length })), console.error),
+      subscribeToHabits((habits) => setStats((prev) => ({ ...prev, habits: habits.length })), console.error)
+    ];
 
-        setStats({
-          tasks: tasks.length,
-          goals: goals.length,
-          habits: habits.length
-        });
-      } catch (err) {
-        console.error("Error fetching stats:", err);
-      }
-    }
-
-    fetchData();
+    return () => {
+      unsubs.forEach((unsubscribe) => unsubscribe());
+    };
   }, []);
 
   const data = {

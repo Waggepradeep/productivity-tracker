@@ -1,43 +1,51 @@
-import { useState, useEffect } from "react";
-import { addHabit, getHabits, toggleHabitDone, deleteHabit } from "../firebase/firestore";
+﻿import { useState, useEffect } from "react";
+import { addHabit, deleteHabit, subscribeToHabits, toggleHabitDone } from "../firebase/firestore";
 
 export default function HabitTracker() {
   const [habits, setHabits] = useState([]);
   const [newHabit, setNewHabit] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchHabits();
+    const unsubscribe = subscribeToHabits(
+      (data) => setHabits(data),
+      (err) => setError(err.message)
+    );
+    return () => unsubscribe();
   }, []);
 
-  async function fetchHabits() {
+  async function handleAddHabit() {
+    const name = newHabit.trim();
+    if (!name) return;
+
     try {
-      const data = await getHabits();
-      setHabits(data);
-    } catch (error) {
-      console.error(error);
+      await addHabit(name);
+      setNewHabit("");
+    } catch (err) {
+      setError(err.message);
     }
   }
 
-  async function handleAddHabit() {
-    if (!newHabit.trim()) return;
-    await addHabit(newHabit.trim());
-    setNewHabit("");
-    fetchHabits();
-  }
-
   async function handleToggleHabit(id, completed) {
-    await toggleHabitDone(id, completed);
-    fetchHabits();
+    try {
+      await toggleHabitDone(id, completed);
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   async function handleDeleteHabit(id) {
-    await deleteHabit(id);
-    fetchHabits();
+    try {
+      await deleteHabit(id);
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   return (
     <div className="section habit-section">
       <h2>Habit Tracker</h2>
+      {error && <p className="error">{error}</p>}
       <div>
         <input
           type="text"
@@ -58,7 +66,7 @@ export default function HabitTracker() {
             >
               {habit.name}
             </span>
-            <button onClick={() => handleDeleteHabit(habit.id)}>❌</button>
+            <button onClick={() => handleDeleteHabit(habit.id)}>Delete</button>
           </li>
         ))}
       </ul>
