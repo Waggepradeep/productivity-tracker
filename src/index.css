@@ -215,3 +215,8 @@ li button {
   max-width: 300px;
   margin-top: 0.5rem;
 }
+
+.error {
+  color: #ff8f8f;
+  margin: 0.5rem 0;
+}
