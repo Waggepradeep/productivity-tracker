@@ -1,8 +1,19 @@
-import { useState } from "react";
-import { register } from "../firebase/auth";
+﻿import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { updateProfile, reload } from "firebase/auth";
-import { auth } from "../firebase/config";
+import { useAuth } from "../context/useAuth";
+
+function mapAuthError(code) {
+  switch (code) {
+    case "auth/email-already-in-use":
+      return "That email is already in use.";
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+    case "auth/weak-password":
+      return "Password must be at least 6 characters.";
+    default:
+      return "Registration failed. Please try again.";
+  }
+}
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -10,19 +21,17 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { signup } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
     try {
-      const userCredential = await register(email, password);
-      // Set display name in Firebase Auth
-      await updateProfile(userCredential.user, { displayName: username });
-      // Reload to ensure the profile is updated
-      await reload(auth.currentUser);
+      await signup(email, password, username.trim());
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message);
+      setError(mapAuthError(err.code));
     }
   };
 
