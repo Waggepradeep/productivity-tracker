@@ -3,80 +3,72 @@ import { db, auth } from "./config";
 import {
   collection,
   addDoc,
-  getDocs,
   deleteDoc,
   doc,
   query,
-  updateDoc
+  updateDoc,
+  onSnapshot,
+  orderBy
 } from "firebase/firestore";
+
+function getUserCollection(collectionName) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Not authenticated");
+  return collection(db, "users", user.uid, collectionName);
+}
 
 // ====== TASKS ======
 export async function addTask(task) {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Not authenticated");
-
-  return await addDoc(collection(db, "users", user.uid, "tasks"), task);
-}
-
-export async function getTasks() {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Not authenticated");
-
-  const q = query(collection(db, "users", user.uid, "tasks"));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return addDoc(getUserCollection("tasks"), task);
 }
 
 export async function deleteTask(id) {
   const user = auth.currentUser;
   if (!user) throw new Error("Not authenticated");
+  return deleteDoc(doc(db, "users", user.uid, "tasks", id));
+}
 
-  return await deleteDoc(doc(db, "users", user.uid, "tasks", id));
+export function subscribeToTasks(onData, onError) {
+  const q = query(getUserCollection("tasks"), orderBy("createdAt", "desc"));
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      onData(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
+    },
+    onError
+  );
 }
 
 // ====== GOALS ======
 export async function addGoal(goal) {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Not authenticated");
-
-  return await addDoc(collection(db, "users", user.uid, "goals"), goal);
-}
-
-export async function getGoals() {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Not authenticated");
-
-  const q = query(collection(db, "users", user.uid, "goals"));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return addDoc(getUserCollection("goals"), goal);
 }
 
 export async function deleteGoal(id) {
   const user = auth.currentUser;
   if (!user) throw new Error("Not authenticated");
+  return deleteDoc(doc(db, "users", user.uid, "goals", id));
+}
 
-  return await deleteDoc(doc(db, "users", user.uid, "goals", id));
+export function subscribeToGoals(onData, onError) {
+  const q = query(getUserCollection("goals"), orderBy("createdAt", "desc"));
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      onData(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
+    },
+    onError
+  );
 }
 
 // ====== HABITS ======
 export async function addHabit(habit) {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Not authenticated");
-
-  return await addDoc(collection(db, "users", user.uid, "habits"), {
+  return addDoc(getUserCollection("habits"), {
     name: habit,
     completed: false,
-    date: new Date().toDateString()
+    date: new Date().toISOString().slice(0, 10),
+    createdAt: Date.now()
   });
-}
-
-export async function getHabits() {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Not authenticated");
-
-  const q = query(collection(db, "users", user.uid, "habits"));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
 export async function toggleHabitDone(id, currentStatus) {
@@ -86,13 +78,23 @@ export async function toggleHabitDone(id, currentStatus) {
   const habitRef = doc(db, "users", user.uid, "habits", id);
   await updateDoc(habitRef, {
     completed: !currentStatus,
-    date: new Date().toDateString()
+    date: new Date().toISOString().slice(0, 10)
   });
 }
 
 export async function deleteHabit(id) {
   const user = auth.currentUser;
   if (!user) throw new Error("Not authenticated");
+  return deleteDoc(doc(db, "users", user.uid, "habits", id));
+}
 
-  return await deleteDoc(doc(db, "users", user.uid, "habits", id));
+export function subscribeToHabits(onData, onError) {
+  const q = query(getUserCollection("habits"), orderBy("createdAt", "desc"));
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      onData(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
+    },
+    onError
+  );
 }
