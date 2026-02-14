@@ -1,18 +1,27 @@
 ﻿import { useState, useEffect } from "react";
 import { addHabit, deleteHabit, subscribeToHabits, toggleHabitDone } from "../firebase/firestore";
 
-export default function HabitTracker() {
+function mapTrackerError(err) {
+  if (err?.message === "Not authenticated") return "Please log in again.";
+  if (err?.message?.includes("not configured")) return "App configuration is incomplete.";
+  return "Something went wrong. Please try again.";
+}
+
+export default function HabitTracker({ onCountChange }) {
   const [habits, setHabits] = useState([]);
   const [newHabit, setNewHabit] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     const unsubscribe = subscribeToHabits(
-      (data) => setHabits(data),
-      (err) => setError(err.message)
+      (data) => {
+        setHabits(data);
+        onCountChange?.(data.length);
+      },
+      (err) => setError(mapTrackerError(err))
     );
     return () => unsubscribe();
-  }, []);
+  }, [onCountChange]);
 
   async function handleAddHabit() {
     const name = newHabit.trim();
@@ -22,7 +31,7 @@ export default function HabitTracker() {
       await addHabit(name);
       setNewHabit("");
     } catch (err) {
-      setError(err.message);
+      setError(mapTrackerError(err));
     }
   }
 
@@ -30,7 +39,7 @@ export default function HabitTracker() {
     try {
       await toggleHabitDone(id, completed);
     } catch (err) {
-      setError(err.message);
+      setError(mapTrackerError(err));
     }
   }
 
@@ -38,7 +47,7 @@ export default function HabitTracker() {
     try {
       await deleteHabit(id);
     } catch (err) {
-      setError(err.message);
+      setError(mapTrackerError(err));
     }
   }
 
@@ -59,13 +68,14 @@ export default function HabitTracker() {
       <ul>
         {habits.map((habit) => (
           <li key={habit.id}>
-            <span
-              className={habit.completed ? "completed" : ""}
+            <button
+              type="button"
+              className={habit.completed ? "completed habit-toggle" : "habit-toggle"}
+              aria-pressed={habit.completed}
               onClick={() => handleToggleHabit(habit.id, habit.completed)}
-              style={{ cursor: "pointer" }}
             >
               {habit.name}
-            </span>
+            </button>
             <button onClick={() => handleDeleteHabit(habit.id)}>Delete</button>
           </li>
         ))}

@@ -1,5 +1,4 @@
-﻿import { useEffect, useState } from "react";
-import { Bar } from "react-chartjs-2";
+﻿import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,25 +8,10 @@ import {
   Tooltip,
   Legend
 } from "chart.js";
-import { subscribeToGoals, subscribeToHabits, subscribeToTasks } from "../firebase/firestore";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export default function StatsChart() {
-  const [stats, setStats] = useState({ tasks: 0, goals: 0, habits: 0 });
-
-  useEffect(() => {
-    const unsubs = [
-      subscribeToTasks((tasks) => setStats((prev) => ({ ...prev, tasks: tasks.length })), console.error),
-      subscribeToGoals((goals) => setStats((prev) => ({ ...prev, goals: goals.length })), console.error),
-      subscribeToHabits((habits) => setStats((prev) => ({ ...prev, habits: habits.length })), console.error)
-    ];
-
-    return () => {
-      unsubs.forEach((unsubscribe) => unsubscribe());
-    };
-  }, []);
-
+export default function StatsChart({ stats }) {
   const data = {
     labels: ["Statistics"],
     datasets: [

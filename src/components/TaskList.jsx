@@ -1,28 +1,37 @@
 ﻿import { useState, useEffect } from "react";
 import { addTask, deleteTask, subscribeToTasks } from "../firebase/firestore";
 
-export default function TaskList() {
+function mapTrackerError(err) {
+  if (err?.message === "Not authenticated") return "Please log in again.";
+  if (err?.message?.includes("not configured")) return "App configuration is incomplete.";
+  return "Something went wrong. Please try again.";
+}
+
+export default function TaskList({ onCountChange }) {
   const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     const unsubscribe = subscribeToTasks(
-      (data) => setTasks(data),
-      (err) => setError(err.message)
+      (data) => {
+        setTasks(data);
+        onCountChange?.(data.length);
+      },
+      (err) => setError(mapTrackerError(err))
     );
     return () => unsubscribe();
-  }, []);
+  }, [onCountChange]);
 
   async function handleAddTask() {
     const text = taskInput.trim();
     if (!text) return;
 
     try {
-      await addTask({ text, createdAt: Date.now() });
+      await addTask({ text });
       setTaskInput("");
     } catch (err) {
-      setError(err.message);
+      setError(mapTrackerError(err));
     }
   }
 
@@ -30,7 +39,7 @@ export default function TaskList() {
     try {
       await deleteTask(id);
     } catch (err) {
-      setError(err.message);
+      setError(mapTrackerError(err));
     }
   }
 
