@@ -22,6 +22,8 @@ The app is built with React + Vite on the frontend and Firebase (Auth + Firestor
 - Habit management (add, toggle complete, delete)
 - Realtime sync with Firestore listeners
 - Activity chart for tasks, goals, and habits
+- Graceful Firebase config error screen when env values are missing
+- Keyboard-accessible habit toggle button (`aria-pressed`)
 - Responsive layout for desktop and mobile
 
 ## Tech Stack
@@ -98,12 +100,13 @@ This keeps data isolated per authenticated user.
 
 ## Realtime Behavior
 
-The app uses Firestore subscriptions (`onSnapshot`) for trackers and stats.
-When a user adds/updates/deletes items, UI updates automatically without manual refresh.
+The app uses Firestore subscriptions (`onSnapshot`) for each tracker list.
+The dashboard chart receives counts from tracker state to avoid duplicate listeners.
+New task/goal/habit items use Firestore `serverTimestamp()` for consistent ordering across devices.
 
 ## Troubleshooting
 
-- Blank screen on startup:
+- Firebase configuration error screen on startup:
   - Check that `.env` exists and includes all required Firebase keys.
   - Restart the dev server after changing `.env`.
 - Auth errors:
