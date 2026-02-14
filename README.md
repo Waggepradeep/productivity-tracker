@@ -1,38 +1,46 @@
-# 📅 Productivity Tracker
+﻿# Productivity Tracker
 
-A full-stack productivity management web application built with **React (Vite)**, **Firebase Authentication**, and **Firestore**.  
-Track your **tasks**, **goals**, and **habits**, and visualize your progress using interactive charts.
+A productivity web app built with React, Vite, Firebase Authentication, and Cloud Firestore.
 
----
+## Features
 
-## 🚀 Features
+- Email/password authentication
+- Task, goal, and habit tracking
+- Realtime dashboard updates
+- Activity stats chart
+- Responsive UI for desktop and mobile
 
-- **User Authentication & Management**
-  - Register and log in with Firebase Authentication
-  - Persistent authentication state across sessions
-  - Username support for personalized greetings
+## Tech Stack
 
-- **Task, Goal, and Habit Tracking**
-  - Add, view, and delete tasks
-  - Track goals and habits with separate sections
-  - Organized dashboard for easy access
+- Frontend: React + Vite
+- Backend: Firebase Auth + Firestore
+- Charts: Chart.js + react-chartjs-2
 
-- **Activity Statistics**
-  - Interactive chart to visualize activity statistics
-  - Real-time updates from Firestore
+## Setup
 
-- **Responsive Design**
-  - Clean and modern UI
-  - Fully responsive for desktop and mobile
+1. Install dependencies:
 
----
+```bash
+npm install
+```
 
-## 🛠 Tech Stack
+2. Create a local environment file from `.env.example`:
 
-- **Frontend:** React (Vite), CSS
-- **Backend:** Firebase Authentication, Firebase Firestore
-- **Charts:** Chart.js / Recharts
-- **Hosting:** Vercel (or any React hosting platform)
-- **Version Control:** Git + GitHub
+```bash
+cp .env.example .env
+```
 
----
+3. Fill in Firebase values in `.env`.
+
+4. Start development server:
+
+```bash
+npm run dev
+```
+
+## Scripts
+
+- `npm run dev` - start dev server
+- `npm run build` - production build
+- `npm run preview` - preview production build
+- `npm run lint` - run ESLint
