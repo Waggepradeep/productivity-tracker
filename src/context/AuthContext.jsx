@@ -1,24 +1,18 @@
-// src/context/AuthContext.jsx
-import { createContext, useContext, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
-  getAuth,
   onAuthStateChanged,
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile,
-  reload
+  updateProfile
 } from "firebase/auth";
-import app from "../firebase/config";
-
-const AuthContext = createContext();
-const auth = getAuth(app);
+import { auth } from "../firebase/config";
+import { AuthContext } from "./auth-context";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Track auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -27,28 +21,21 @@ export function AuthProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  // Signup with instant username update
   const signup = async (email, password, username) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     if (username) {
       await updateProfile(userCredential.user, { displayName: username });
-      await reload(auth.currentUser); // ensure profile is updated
-      setUser(auth.currentUser); // update context immediately
+      setUser({ ...userCredential.user, displayName: username });
     }
+    return userCredential;
   };
 
-  const login = (email, password) =>
-    signInWithEmailAndPassword(auth, email, password);
+  const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
 
   const logout = () => signOut(auth);
+  const value = useMemo(() => ({ user, loading, signup, login, logout }), [user, loading]);
 
   return (
-    <AuthContext.Provider value={{ user, signup, login, logout }}>
-      {!loading && children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }
